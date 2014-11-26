@@ -1,0 +1,31 @@
+Distance function
+- Euclidean
+
+Learning rate
+- Linear
+- Hyperbolic
+- Exponential
+
+Neighborhood function
+- Concentric squares
+- Concentric hexagons
+- Gaussian distribution
+
+Grid
+- Squares
+- Hexagons
+- Free
+
+Evaluation
+- cluster validity
+  - intra-cluster / inter-cluster
+- 2 SOM quality properties:
+  - data representation accuracy
+    -> average quantization error
+     = average error between data vectors and their BMUs on the map.
+  - data set topology representation accuracy
+    -> Topograhic error measure:
+     bv. percentage of data vectors for which the first- and second-BMUs are
+         not adjacent units
+  - mapping uniformity
+  - ~= decent distance map / hit map

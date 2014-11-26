@@ -1,0 +1,10 @@
+To do
+=====
+
+ - Toroïdal extensions
+ - Finetuning learning rate & neighbourhood function
+ - Decent visualization of labeled data
+ - Distance map / U-matrix
+ - Hit map
+ - Extend to SOM with free positioning
+ - Perform some research for a decent evaluation function (see decisions.txt)
