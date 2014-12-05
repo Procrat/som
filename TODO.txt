@@ -1,10 +1,26 @@
 To do
 =====
 
- - Toroïdal extensions
- - Finetuning learning rate & neighbourhood function
+Base framework
+--------------
+ - Write prediction (in case of labels)
+   -> Research: prediction based on SOM (how to detect small clusters?)
  - Decent visualization of labeled data
  - Distance map / U-matrix
- - Hit map
- - Extend to SOM with free positioning
+ - Polar charts map
+
+
+Validation
+----------
  - Perform some research for a decent evaluation function (see decisions.txt)
+
+
+Extensions
+----------
+ - Toroïdal extensions
+ - Extend to SOM with free positioning
+
+
+Finetuning
+----------
+ - Finetune learning rate & neighbourhood function
