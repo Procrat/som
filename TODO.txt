@@ -5,9 +5,6 @@ Base framework
 --------------
  - Write prediction (in case of labels)
    -> Research: prediction based on SOM (how to detect small clusters?)
- - Decent visualization of labeled data
- - Distance map / U-matrix
- - Polar charts map
 
 
 Validation

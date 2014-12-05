@@ -10,40 +10,54 @@ import matplotlib.pyplot as plt
 
 
 class SOM():
-    def __init__(self, data, width=10, height=10, init_variance=None,
+    def __init__(self, data, width, height, init_variance=None,
                  init_learning_rate=0.1, labels=None):
+        """Params:
+          - data should be a list of numerical vectors
+          - width and height should be the dimension of the map
+          - init_variance (optional) should be the initial variance of the
+            Gaussian distribution of the neighbourhood function
+          - init_learning_rate (optional) should be the initial learning rate
+          - labels (optional) should be the class labels for the data if these
+            exist. We can give nice plots in this case.
+        """
         self.width, self.height = width, height
         self.data = data
+        # Initialize the codebook with a specified raster of zero-vectors
         self.codebook = [[Node(i, j, len(data[0]))
                           for j in range(width)]
                          for i in range(height)]
+        # If no initial variance is given, make a guess based on the dimensions
         if init_variance is None:
             init_variance = ((width ** 2 + height ** 2) / 2) ** 0.5
         self.init_variance = init_variance
         self.init_learning_rate = init_learning_rate
         self.labels = labels
 
-    def train(self, iterations=100):
+    def train(self, iterations=500):
+        """Trains the SOM."""
         for iteration in range(iterations):
+            # Select random data vector
             (input_index, input_vector) = self._random_vector()
-            bmu = self.bmu(input_index, input_vector)
+            # Find the best matching unit in the codebook
+            bmu = self.bmu(input_vector)
+            # Count as a hit for the chosen vector (optionally with a label)
+            if self.labels is not None:
+                bmu.hit(self.labels[input_index])
+            else:
+                bmu.hit()
+            # Update the neighbours of the bmu accordingly
             self.update_neighbours(iteration, iterations, input_vector, bmu)
 
-    def bmu(self, input_index, input_vector):
-        # Find codebook vector with smallest distance
-        winner = min(chain(*self.codebook),
-                     key=lambda x: x.distance_sq(input_vector))
-        # Count as a hit for the chosen vector (optionally with a label)
-        if self.labels is not None:
-            winner.hit(self.labels[input_index])
-        else:
-            winner.hit()
-
-        return winner
+    def bmu(self, input_vector):
+        """Selects the best matching unit for an input vector."""
+        return min(chain(*self.codebook),
+                   key=lambda x: x.distance_sq(input_vector))
 
     def update_neighbours(self, iteration, iterations, input_vector, bmu):
-        t = iteration / iterations
+        """Updates the neighbours of the bmu according to the new input."""
 
+        t = iteration / iterations
         # Linear
         #learning_rate = self.init_learning_rate * (1 - t)
         learning_rate = self.init_learning_rate / (1 + t)
@@ -51,7 +65,6 @@ class SOM():
         # Exponential
         #learning_rate = self.init_learning_rate * \
         #    (.005 / self.init_learning_rate) ** t
-
         #variance = self.init_variance * (1 - t)
         variance = self.init_variance / (1 + t)
         #variance = self.init_variance ** (-t + 1)
@@ -62,8 +75,9 @@ class SOM():
             node.update(learning_rate * neighbourhood, input_vector)
 
     def predict(self, test_vector):
+        """Predicts a test vector according to the class label of the bmu."""
         # TODO
-        pass
+        return self.bmu(test_vector).label()
 
     def __repr__(self):
         return repr(self.codebook)
@@ -80,13 +94,49 @@ class SOM():
         plt.show()
 
     def label_plot(self):
-        # TODO
+        """If there are class labels available for the data, we plot the
+        SOM with labels on the nodes where this class is the most frequent."""
         assert self.labels is not None
 
-        #plt.imshow(values, interpolation='none')
-        #plt.text(2, 5, 'lolcatz')
-        #plt.title('Label plot')
-        #plt.show()
+        gradient = [[[row / self.height, col / self.width, 0]
+                     for col in range(self.width)]
+                    for row in range(self.height)]
+        plt.imshow(gradient, interpolation='none')
+
+        for label in set(self.labels) - set([None]):
+            class_node = max(chain(*self.codebook),
+                             key=lambda node: node.labels[label])
+            print(class_node.row, class_node.col)
+            print(label)
+            plt.text(class_node.row, class_node.col, label,
+                     horizontalalignment='center', verticalalignment='center')
+
+        plt.title('Label plot')
+        plt.show()
+
+    def polar_plots(self):
+        """Shows for each node the attributes of the codebook vector as a polar
+        plot."""
+
+        import numpy as np
+        fig, axes = plt.subplots(self.height, self.width,
+                                 subplot_kw={'polar': True})
+        normalized_codebook = normalize(x.vector for x in chain(*self.codebook))
+
+        for ax, codebook_vector in zip(chain(*axes), normalized_codebook):
+            n = len(codebook_vector)
+            thetas = np.linspace(0, 2 * np.pi, n, endpoint=False)
+            radii = codebook_vector
+            bars = ax.bar(thetas, radii, width=2 * np.pi / n)
+
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            for i, bar in enumerate(bars):
+                bar.set_facecolor(plt.cm.jet(i / n))
+                bar.set_alpha(0.5)
+
+        fig.suptitle('Polar plots')
+        plt.show()
 
     def hit_map(self):
         """Shows a heatmap of the codebook where the heat represents how many
@@ -99,25 +149,28 @@ class SOM():
 
     def distance_map(self):
         """Shows a plot of how far the vector of a node is from its
-        neighbours. A darker color means it's further away."""
+        neighbours. A warmer color means it's further away."""
 
         distances = []
         for row, nodes in enumerate(self.codebook):
+            distance_row = []
             for col, node in enumerate(nodes):
                 node_distances = []
                 for drow, dcol in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-                    if (row + drow < 0 or row + drow > len(self.codebook) or
-                            col + dcol < 0 or col + dcol > len(nodes)):
+                    if (row + drow < 0 or row + drow >= len(self.codebook) or
+                            col + dcol < 0 or col + dcol >= len(nodes)):
                         continue
                     neighbour = self.codebook[row + drow][col + dcol].vector
                     node_distances.append(node.distance(neighbour))
-                distances[row][col] = sum(node_distances) / len(node_distances)
+                distance_row.append(sum(node_distances) / len(node_distances))
+            distances.append(distance_row)
 
         plt.imshow(distances, interpolation='none')
         plt.title('Distance map / U-matrix')
         plt.show()
 
     def _random_vector(self):
+        """Selects a random data vector."""
         index = random.randrange(len(self.data))
         return (index, self.data[index])
 
@@ -147,7 +200,8 @@ class Node():
 
     def get_label(self):
         # TODO might not be the best label
-        return self.labels.most_common()[0]
+        most_common = self.labels.most_common(1)
+        return most_common[0] if len(most_common) > 0 else None
 
     def __repr__(self):
         return '%d,%d: %s (%s)' % (self.row, self.col, self.get_label(),
@@ -159,16 +213,30 @@ def gaussian(node1, node2, variance):
     return exp(-dist_sq / (2 * variance * variance))
 
 
+def normalize(vectors):
+    vectors = list(vectors)
+    mins = [min(x) for x in zip(*vectors)]
+    maxs = [max(x) for x in zip(*vectors)]
+    for vector in vectors:
+        yield [(number - min_) / (max_ - min_)
+               for min_, max_, number in zip(mins, maxs, vector)]
+
+
 def test_bone_marrow():
     with open('data/BoneMarrow_Basal1.csv') as file_:
         data = [list(map(float, x)) for x in islice(csv.reader(file_), 1, None)]
     with open('./data/manualGating.csv') as file_:
-        labels = list(islice(csv.reader(file_), 1, None))
+        labels = (x[1] for x in islice(csv.reader(file_), 1, None))
+        labels = [None if x == 'Unknown' else x for x in labels]
 
-    som = SOM(data, width=20, height=20, init_variance=7,
+    som = SOM(data, width=5, height=5, init_variance=7,
               init_learning_rate=.5, labels=labels)
-    som.train(iterations=1)
-    som.label_plot()
+    #som = SOM([[1]], width=20, height=20, init_variance=7,
+    #som = SOM([[1]], width=5, height=5, init_variance=7,
+              #init_learning_rate=.5, labels=[5])
+    som.train(iterations=500)
+    #som.label_plot()
+    som.polar_plots()
 
 
 def test_colors():
@@ -180,9 +248,9 @@ def test_colors():
     som.train(iterations=500)
     som.color_plot()
     #som.hit_map()
-    som.distance_map()
+    #som.distance_map()
 
 
 if __name__ == '__main__':
-    #test_bone_marrow()
-    test_colors()
+    test_bone_marrow()
+    #test_colors()
