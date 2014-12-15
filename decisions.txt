@@ -1,3 +1,9 @@
+Good:
+- Robuuster
+
+Normalization
+- Essentieel
+
 Distance function
 - Euclidean
 
@@ -15,10 +21,38 @@ Grid
 - Squares
 - Hexagons
 - Free
+  - Both the training scheme and the search for the best matching unit remains
+    practically the same. Only the updating of the neighbors differs.
 
 Evaluation
+- Quantization error + topology preservation
 - cluster validity
-  - intra-cluster / inter-cluster
+  - A common definition of optimal clustering is a partition that minimizes
+    distances within clusters and maximizes distances between clusters. There
+    are several ways to calculate this. In this paper, we choose to use the
+    Davies-Bouldin index \ref{clustering_som}\ref{13}, which is defined as:
+      $1/C \sum_{k=1}^C{\max_{l \ne k}{\frac{S_c(Q_k) + S_c(Q_l)}{d_c(Q_k,Q_l)}}}$
+    where $C$ is the number of clusters, $S_c$ the within-cluster distance and
+    $d_c$ the between-cluster distance. Unlike certain other metrics, this
+    does not require the clusters to be compact and well spearated.
+
+    The index uses the centroid distance $S_c = \frac{\sum_i{\min_{i'}{\left\{
+        ||x_i-x_{i'}|| \right\}}}}{N_k}$
+    for the within-cluster distance and the centroid linkage $d_c = ||c_k -
+        c_l||$ for between-cluster distance
+
+- SOM error function {17}
+  - It is shown that for a fixed neighborhood function, the error $E$ of a SOM
+    can be calculated as $E = \sum_{i=1}^N{\sum_{i=1}^N{h_{bj}}}$ where $N$ is
+    the number of training samples, $M$ is the number of map units and $h_{bj}$
+    is the neighborhood kernel, centered at unit $b$ and evaluated at unit $j$.
+    Unit $b$ is the best-matching unit of vector $x_i$.
+
+- Sammon projection error
+- purity
+
+- Testing of labeled data
+
 - 2 SOM quality properties:
   - data representation accuracy
     -> average quantization error
@@ -29,3 +63,93 @@ Evaluation
          not adjacent units
   - mapping uniformity
   - ~= decent distance map / hit map
+
+- SOM goodness measure (continuity + accuracy) of critfin:
+  - Distance of test vector x to second nearest bmu.
+
+
+- Label frequence table
+66359	Myelocyte
+54821	Memory CD4+ T
+43581	Platelet
+37314	Erythroblast
+31144	Naive CD8+ T
+29722	Mature CD38lo B
+28042	Memory CD8+ T
+25388	CD11bhi Monocyte
+24641	Naive CD4+ T
+18800	NK
+18147	Megakaryocyte
+6421	CD11bmid Monocyte
+6053	Pre-B II
+4140	CD11b- Monocyte
+3900	Immature B
+2257	Mature CD38mid B
+1463	Plasma Cell
+1344	MPP
+1194	CMP
+968	HSC
+930	Pre-B I
+673	MEP
+666	Plasmacytoid DC
+139	GMP
+
+
+means
+-----
+
+            Cell.Length	DNA	CD3	CD4	CD8	CD11b	CD19	CD20	CD33	CD34	CD38	CD45	CD45RA	CD90	CD123
+Megakaryocyte	27.781	5.355	-0.598	-0.004	0	0.121	-0.023	0.047	0.271	0.195	1.039	-0.127	0.107	0.335	0.091
+Plasma cell	27.421	5.679	0.645	0.356	0.324	0.636	3.262	0.288	1.209	0.585	7.314	2.489	1.227	0.106	0.589
+Pre-B II	27.409	5.256	0.189	0.113	0.137	0.279	2.808	0.136	0.776	0.216	5.771	2.957	2.088	0.266	0.668
+Erythroblast	27.357	5.51	2.092	0.041	0.02	0.14	-0.022	0.087	0.246	0.235	1.276	-0.097	0.159	0.431	0.121
+Naive CD4+ T	27.356	5.585	4.678	3.916	0.882	0.452	0.042	0.165	0.221	0.27	2.774	4.371	3.295	0.427	0.2
+Mature CD38mid B27.255	5.522	0.085	0.071	0.151	0.255	2.861	2.248	0.815	0.549	5.837	3.736	2.816	0.347	1.221
+Memory CD8+ T	27.249	5.544	4.097	0.283	4.614	0.441	0.056	0.604	0.265	0.385	1.479	4.647	0.952	0.437	0.196
+Mature CD38lo B	27.244	5.438	-0.059	0.115	0.125	0.393	2.953	2.478	0.85	0.563	2.195	4.157	3.307	0.596	1.396
+Naive CD8+ T	27.112	5.64	3.877	0.334	4.625	0.455	0.079	0.593	0.26	0.394	1.982	4.572	3.655	0.447	0.201
+Plasmacytoid DC	27.041	5.724	0.157	1.85	0.918	0.711	0.041	0.277	1.968	0.736	4.563	3.142	2.383	0.47	4.803
+GMP		27	5.792	0.453	0.275	1.884	1.088	0.264	0.306	1.479	2.002	5.497	3.924	3.359	0.494	1.023
+NK		26.851	5.499	-0.116	0.302	0.247	0.875	0.064	0.243	0.454	0.32	4.097	4.203	3.606	0.442	0.638
+Memory CD4+ T	26.788	5.589	4.528	3.961	0.886	0.471	0.041	0.183	0.258	0.261	1.574	4.448	0.655	0.455	0.23
+HSC		26.759	5.586	1.342	0.472	0.285	0.87	0.019	0.252	1.651	2.668	3.316	1.975	0.425	1.321	0.974
+MEP		26.522	5.915	1.814	0.365	0.331	0.4	0.112	0.339	2.281	3.111	5.238	2.189	0.289	0.542	2.013
+Pre-B I		26.509	5.538	1.147	0.255	0.254	0.315	2.413	0.11	0.876	3.051	5.41	1.961	1.044	0.401	0.861
+CD11bhi Monocyte26.5	5.883	0.205	1.972	0.408	3.403	0.112	0.268	4.905	0.487	3.942	4.515	0.771	0.69	1.664
+CD11b- Monocyte	26.187	5.833	0.521	1.579	0.365	0.17	0.053	0.228	4.52	0.517	4.625	3.434	0.923	0.598	1.402
+CD11bmid Monocyt25.843	5.798	0.339	1.566	0.347	1.642	0.076	0.232	4.579	0.518	4.28	3.798	0.888	0.667	1.544
+CMP		25.683	5.821	1.227	0.607	0.306	0.386	0.038	0.31	1.622	2.885	5.387	2.224	0.273	0.538	0.263
+Immature B	25.085	4.579	0.503	0.319	0.331	0.724	1.905	0.031	0.895	0.304	2.091	1.579	0.9	0.446	0.455
+Unknown		24.426	4.905	2.177	0.937	0.831	0.934	0.33	0.34	1.423	0.411	2.641	2.763	1.109	0.459	0.674
+MPP		23.612	3.912	0.835	0.163	0.243	0.398	0.077	0.198	1.01	2.948	2.312	1.048	0.227	-0.008	0.721
+Platelet	17.681	2.839	-0.508	0.024	0.059	0.136	0.055	0.009	0.119	0.171	0.473	-0.035	0.053	0.063	0.028
+Myelocyte	17.499	3.331	1.05	0.244	0.265	-0.076	-0.03	0.033	0.327	0.038	0.796	1.752	0.307	0.098	0.089
+
+
+
+
+
+MEASURES
+--------
+Good (adjusted against chance):
+- Classification report
+- ROC-curve
+- 1 is goed, 0 is slecht
+    - Adjusted Rand
+    - Adjusted mutual info
+    - Normalized mutual info
+
+
+Not so good with lots of clusters:
+- V-measure
+
+Bad:
+- MSE
+- Accuracy
+- Precision
+- Recall
+- Jaccard Similarity
+- F1 score
+- Confusion matrix
+- Miss rate
+- Hamming loss

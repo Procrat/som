@@ -5,6 +5,8 @@ Base framework
 --------------
  - Write prediction (in case of labels)
    -> Research: prediction based on SOM (how to detect small clusters?)
+   SOM.predict(test_vector)
+   GridlessSOM
 
 
 Validation
@@ -15,7 +17,10 @@ Validation
 Extensions
 ----------
  - Toroïdal extensions
+   - update are\_neighbours
  - Extend to SOM with free positioning
+   - Neighborhood function?
+   - Prediction? Fuzzy adhv closest centroid of KNN?
 
 
 Finetuning
