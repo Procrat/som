@@ -1,9 +1,3 @@
-Good:
-- Robuuster
-
-Normalization
-- Essentieel
-
 Distance function
 - Euclidean
 
