@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+"""The base classes and functions of the framework."""
+
 import collections
 from collections import Counter
 import random
@@ -8,7 +10,8 @@ import random
 
 class SOM:
     """A base class for SOMs. It can be directly instantiated when provided
-    with a codebook."""
+    with a codebook.
+    """
 
     def __init__(self, data, codebook, init_learning_rate=0.1, labels=None):
         """Initializes a new SOM object.
@@ -19,7 +22,6 @@ class SOM:
         :labels: (optional) should be the class labels for the data if these
             exist. We can give nice plots in this case.
         """
-
         self.data = data
         assert len(data) > 0
         self.data_vector_size = len(data[0])
@@ -51,23 +53,27 @@ class SOM:
         return min(self.codebook, key=lambda x: x.distance_sq(input_vector))
 
     def update_neighbours(self, iteration, iterations, input_vector, bmu):
-        """Updates the neighbours of the bmu according to the new input."""
+        """Updates the neighbours of the BMU according to the new input."""
 
         t = iteration / iterations
-        #learning_rate = self.init_learning_rate * (1 - t)
-        learning_rate = self.init_learning_rate / (1 + t)
-        #learning_rate = self.init_learning_rate * exp(-t)
-        #learning_rate = self.init_learning_rate * \
-            #(.005 / self.init_learning_rate) ** t
-
+        learning_rate = self.learning_rate(t)
         for node in self.codebook:
             influence = self.codebook.neighbourhood(node, bmu, t)
             node.update(learning_rate, influence, input_vector, bmu)
 
+    def learning_rate(self, t):
+        """Calculates the learning rate value for the given iteration, which is
+        a number between 0 and 1.
+        """
+        # return self.init_learning_rate * (1 - t)
+        return self.init_learning_rate / (1 + t)
+        # return self.init_learning_rate * exp(-t)
+        # return self.init_learning_rate * (.005 / self.init_learning_rate) ** t
+
     def predict(self, test_vectors):
         """Predicts the class label of a test vector or multiple test vectors,
-        according to the class label of the bmu."""
-
+        according to the class label of the bmu.
+        """
         # Calculate the best matching label for each node
         if not self.ready_for_prediction:
             # totals = sum((node.labels for node in self.codebook), Counter())
@@ -105,8 +111,8 @@ class SOM:
     def topology_error(self, test_vectors):
         """Calculates the topology error, a simple topology preservation
         measure. It calculates for a test_vector or multiple test_vectors
-        whether the bmu and the second bmu are neighbouring nodes."""
-
+        whether the bmu and the second bmu are neighbouring nodes.
+        """
         if not isinstance(test_vectors, collections.Iterable):
             test_vectors = [test_vectors]
 
@@ -124,13 +130,12 @@ class SOM:
 
     def _random_vector(self):
         """Selects a random data vector."""
-
         index = random.randrange(len(self.data))
         return (index, self.data[index])
 
 
 class Topology:
-    """An abstract class for codebook classes."""
+    """An abstract base class for codebook classes."""
 
     def neighbourhood(self, node1, node2, t):
         """The neighbourhood function of the topology. Should return the
@@ -154,17 +159,20 @@ class Node:
 
     def distance(self, other_vector):
         """Calculates the distance between the weight vector of this node and
-        another one."""
+        another one.
+        """
         return self.distance_sq(other_vector) ** 0.5
 
     def distance_sq(self, other_vector):
         """Calculates the squared distance between the weight vector of this
-        node and another one."""
+        node and another one.
+        """
         return sum((x - y) ** 2 for x, y in zip(self.vector, other_vector))
 
     def update(self, learning_rate, influence, input_vector, bmu):
         """Updates the weight vector of this node to become more like the input
-        vector, according to a certain factor."""
+        vector, according to a certain factor.
+        """
         factor = learning_rate * influence
         self.vector = [x + factor * (y - x)
                        for x, y in zip(self.vector, input_vector)]
@@ -176,7 +184,8 @@ class Node:
     @property
     def hits(self):
         """Returns the total amount of hits this node recieved, i.e. the amount
-        of times this node was chosen as BMU."""
+        of times this node was chosen as BMU.
+        """
         return sum(self.labels.values())
 
 

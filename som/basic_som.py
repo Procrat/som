@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+"""A regular SOM."""
+
 from collections import UserList
 from .som import normalize
 from .som import SOM, Topology, Node
@@ -8,10 +10,13 @@ from itertools import chain, islice
 from random import choice
 from math import exp
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 
 class BasicSOM(SOM):
+    """A regular SOM."""
+
     def __init__(self, data, width, height, neighbourhood=None,
                  init_variance=None, **kwargs):
         """Initializes a new BasicSOM object.
@@ -31,7 +36,8 @@ class BasicSOM(SOM):
     def color_plot(self):
         """Shows a representation of the BasicSOM where every codebook vector
         is represented as a color.  Of course, this only works for 3- or
-        4-dimensional data."""
+        4-dimensional data.
+        """
         assert 3 <= self.data_vector_size <= 4
 
         values = [[x.vector for x in row] for row in self.codebook.data]
@@ -41,7 +47,8 @@ class BasicSOM(SOM):
 
     def label_plot(self):
         """If there are class labels available for the data, we plot the
-        SOM with labels on the nodes where this class is the most frequent."""
+        SOM with labels on the nodes where this class is the most frequent.
+        """
         assert self.labels is not None
 
         normalized_codebook = normalize(node.vector for node in self.codebook)
@@ -59,10 +66,8 @@ class BasicSOM(SOM):
 
     def polar_plots(self):
         """Shows for each node the attributes of the codebook vector as a polar
-        plot."""
-
-        import numpy as np
-
+        plot.
+        """
         fig, axes = plt.subplots(self.codebook.height, self.codebook.width,
                                  subplot_kw={'polar': True})
         normalized_codebook = normalize(x.vector for x in self.codebook)
@@ -84,8 +89,8 @@ class BasicSOM(SOM):
 
     def hit_map(self):
         """Shows a heatmap of the codebook where the heat represents how many
-        times the nodes were chosen as a BMU."""
-
+        times the nodes were chosen as a BMU.
+        """
         hits = [[node.hits for node in row] for row in self.codebook.data]
         plt.imshow(hits, interpolation='none')
         plt.title('Hit map')
@@ -93,8 +98,8 @@ class BasicSOM(SOM):
 
     def distance_map(self):
         """Shows a plot of how far the vector of a node is from its
-        neighbours. A warmer color means it's further away."""
-
+        neighbours. A warmer color means it's further away.
+        """
         distances = []
         for row, nodes in enumerate(self.codebook.data):
             distance_row = []
@@ -116,50 +121,62 @@ class BasicSOM(SOM):
 
 class Grid(Topology, UserList):
     """A grid topology which is just a wrapper around a 2D list, satisfying the
-    Topology interface."""
+    Topology interface.
+    """
 
     def __init__(self, data, width, height, init_variance=None):
         """Initializes the grid."""
 
         self.width, self.height = width, height
-
         # If no initial variance is given, make a guess based on the dimensions
         if init_variance is None:
             init_variance = ((width ** 2 + height ** 2) / 2) ** 0.5
         self.init_variance = init_variance
-
         real_list = [[GridNode(i, j, choice(data)) for j in range(width)]
                      for i in range(height)]
         super().__init__(real_list)
 
     def __iter__(self):
+        """Returns an iterator which flattens the 2D array to one dimension."""
         return chain(*self.data)
 
     def neighbourhood(self, node1, node2, t):
+        """Returns the neighbourhood influence of node1 over node2 at
+        iteration t. This uses a gaussian distribution.
+        """
         return self._gaussian(node1, node2, t)
 
     def _gaussian(self, node1, node2, t):
         """Calculates a neighbourhood value following a Gaussian distribution.
-        This assumes the nodes are GridNodes."""
-
-        variance = self.init_variance / (1 + t)
-        #variance = self.init_variance * (1 - t)
-        #variance = self.init_variance ** (-t + 1)
-        #variance = self.init_variance * (.001 / self.init_variance) ** t
-
+        This assumes the nodes are GridNodes.
+        """
         dist_sq = self.distance_squared(node1, node2)
+        variance = self._gaussian_variance(t)
         return exp(-dist_sq / (2 * variance * variance))
 
+    def _gaussian_variance(self, t):
+        """A decreasing function for the variance of the gaussian distribution.
+        """
+        # return self.init_variance * (1 - t)
+        return self.init_variance / (1 + t)
+        # return self.init_variance ** (-t + 1)
+        # return self.init_variance * (.001 / self.init_variance) ** t
+
     def distance_squared(self, node1, node2):
+        """Calculates the squared distance between two nodes on the grid."""
         return (node1.row - node2.row) ** 2 + (node1.col - node2.col) ** 2
 
     def are_neighbours(self, node1, node2):
+        """Checks whether two nodes are neighbouring on the grid."""
         return ((node1.row == node2.row and abs(node1.col - node2.col) <= 1)
                 or (node1.col == node2.col and abs(node1.row - node2.row) <= 1))
 
 
 class ToroidalGrid(Grid):
+    """An extension of the regular grid using a torus."""
+
     def distance_squared(self, node1, node2):
+        """Calculates the squared distance between two nodes on the torus."""
         dr = abs(node1.row - node2.row)
         dc = abs(node1.col - node2.col)
         return (min(dr, abs(dr - self.height)) ** 2
@@ -167,16 +184,22 @@ class ToroidalGrid(Grid):
 
 
 class GridNode(Node):
+    """A node in the grid."""
+
     def __init__(self, row, col, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.row, self.col = row, col
 
     def __repr__(self):
+        """Representation: 'row,col: label (vector)'"""
         return '%d,%d: %s (%s)' % (self.row, self.col, self.get_label(),
                                    self.vector)
 
 
 def split_generator(generator, n):
+    """A helper function which splits a generator into multiple generators,
+    cutting it off each time after n elements.
+    """
     while True:
         part = list(islice(generator, n))
         if len(part) > 0:
