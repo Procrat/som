@@ -9,4 +9,4 @@ __copyright__ = 'Copyright 2014 Stijn Seghers'
 
 
 from .som import *
-from . import basic_som, gridless_som
+from . import basic_som, asom

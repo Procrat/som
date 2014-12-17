@@ -9,7 +9,7 @@ however.
 from itertools import islice
 from sklearn import metrics
 from som.basic_som import BasicSOM
-from som.gridless_som import GridlessSOM
+from som.asom import ASOM
 from som import normalize
 import csv
 import random
@@ -43,8 +43,8 @@ def test_colors():
         'push': .1,
         'inhibition': 10,
     }
-    som = GridlessSOM(data, 40, 40, init_learning_rate=.5,
-                      topology_kwargs=topology_kwargs)
+    som = ASOM(data, 40, 40, init_learning_rate=.5,
+               topology_kwargs=topology_kwargs)
     som.train(iterations=1000)
     som.color_plot()
     print('ASOM (40x40, lr=.5, %s)' % repr(topology_kwargs))
@@ -88,8 +88,8 @@ def test_iris(data, labels):
         'push': .1,
         'inhibition': 20,
     }
-    som = GridlessSOM(train_data, 8, 8, init_learning_rate=.5,
-                      labels=train_labels, topology_kwargs=topology_kwargs)
+    som = ASOM(train_data, 8, 8, init_learning_rate=.5, labels=train_labels,
+               topology_kwargs=topology_kwargs)
     som.train(iterations=200)
     som.label_plot()
     print('ASOM (8x8, lr=.5, %s)' % repr(topology_kwargs))
@@ -152,8 +152,8 @@ def test_bone_marrow(data, labels):
         'push': .12,
         'inhibition': 40,
     }
-    som = GridlessSOM(train_data, 40, 40, init_learning_rate=.5,
-                      labels=train_labels, topology_kwargs=topology_kwargs)
+    som = ASOM(train_data, 40, 40, init_learning_rate=.5,
+               labels=train_labels, topology_kwargs=topology_kwargs)
     som.train(iterations=2000)
     som.label_plot()
     print('ASOM (40x40, lr=.5, %s)' % repr(topology_kwargs))

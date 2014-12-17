@@ -15,10 +15,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class GridlessSOM(SOM):
+class ASOM(SOM):
 
     def __init__(self, data, width, height, topology_kwargs={}, **kwargs):
-        """Initializes a new GridlessSOM object.
+        """Initializes a new ASOM object.
         :data: should be a list of numerical vectors
         :width and :height: should be the dimensions of the initial grid
         :init_variance: the initial variance of the gaussian distribution of
