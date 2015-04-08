@@ -110,11 +110,10 @@ class PlaneNode(Node):
         """
         super().update(learning_rate, influence, input_vector, bmu)
 
-        if learning_rate < .33:
-            self.update_position(learning_rate, influence, bmu)
+        self.update_position(learning_rate, influence, bmu)
 
-    def update_location(self, learning_rate, influence, bmu):
-        """Updates the location of the node on the plane."""
+    def update_position(self, learning_rate, influence, bmu):
+        """Updates the position of the node on the plane."""
         factor = learning_rate * (influence - self.push) / self.inhibition
         self.x = self.x + factor * (bmu.x - self.x)
         self.y = self.y + factor * (bmu.y - self.y)
@@ -162,6 +161,8 @@ class Plane(Topology, UserList):
         distribution.
         """
         return self._gaussian(node1, node2, t)
+        # M-SOM
+        # return max(0, 1 - self.plane_distance_squared(node1, node2))
 
     def _gaussian(self, node1, node2, t):
         """Calculates the neighbourhood influence using a Gaussian
@@ -221,8 +222,8 @@ class Plane(Topology, UserList):
 class TorusNode(PlaneNode):
     """A Node implementation for the Torus topology."""
 
-    def update_location(self, learning_rate, influence, bmu):
-        """Updates the location of the node on the torus."""
+    def update_position(self, learning_rate, influence, bmu):
+        """Updates the position of the node on the torus."""
         factor = learning_rate * (influence - self.push) / self.inhibition
         self.x = self.lin_comb(self.x, bmu.x, factor)
         self.y = self.lin_comb(self.y, bmu.y, factor)
@@ -234,9 +235,7 @@ class TorusNode(PlaneNode):
             factor = 1 - factor
         if abs(a - b) > abs(a + 1 - b):
             a += 1
-        c = (1 - factor) * a + factor * b
-        if c >= 1:
-            c -= 1
+        c = ((1 - factor) * a + factor * b) % 1
         return c
 
 
@@ -248,7 +247,7 @@ class Torus(Plane):
     def plane_distance_squared(self, node1, node2):
         dx = abs(node1.x - node2.x)
         dy = abs(node1.y - node2.y)
-        return min(dx, abs(dx - 1)) ** 2 + min(dy, abs(dy - 1)) ** 2
+        return min(dx, 1 - dx) ** 2 + min(dy, 1 - dy) ** 2
 
 
 # Adapted from common code of Pauli Virtanen

@@ -6,6 +6,7 @@
 import collections
 from collections import Counter
 import random
+# from math import exp
 
 
 class SOM:
@@ -78,6 +79,11 @@ class SOM:
         if not self.ready_for_prediction:
             # totals = sum((node.labels for node in self.codebook), Counter())
             for node in self.codebook:
+                # Remove unlabeled hits
+                try:
+                    node.labels.pop(None)
+                except KeyError:
+                    pass
                 # # Take into account small clusters. A frequency approach
                 # freq_counter = Counter({label: count / totals[label]
                 #                    for label, count in node.labels.items()})

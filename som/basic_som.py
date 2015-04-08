@@ -145,6 +145,8 @@ class Grid(Topology, UserList):
         iteration t. This uses a gaussian distribution.
         """
         return self._gaussian(node1, node2, t)
+        # M-SOM
+        # return max(0, 1 - self.distance_squared(node1, node2))
 
     def _gaussian(self, node1, node2, t):
         """Calculates a neighbourhood value following a Gaussian distribution.
